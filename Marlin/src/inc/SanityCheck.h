@@ -2527,6 +2527,8 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
                                                       && _PLUG_UNUSED_TEST(A,U), && _PLUG_UNUSED_TEST(A,V), && _PLUG_UNUSED_TEST(A,W) ) )
 
 // A machine with endstops must have a minimum of 3
+// // Polyformer has no required endstops
+/*
 #if HAS_ENDSTOPS
   #if _AXIS_PLUG_UNUSED_TEST(X)
     #error "You must enable USE_XMIN_PLUG or USE_XMAX_PLUG."
@@ -2635,6 +2637,7 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
     #error "Z4_USE_ENDSTOP must be set with Z_MULTI_ENDSTOPS and Z4_DRIVER_TYPE."
   #endif
 #endif
+*/
 
 #if defined(ENDSTOP_NOISE_THRESHOLD) && !WITHIN(ENDSTOP_NOISE_THRESHOLD, 2, 7)
   #error "ENDSTOP_NOISE_THRESHOLD must be an integer from 2 to 7."
