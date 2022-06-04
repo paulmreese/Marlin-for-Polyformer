@@ -89,16 +89,16 @@
  */
 #ifndef MOTHERBOARD
   #error "MOTHERBOARD is required."
-#elif !defined(X_BED_SIZE) || !defined(Y_BED_SIZE)
-  #error "X_BED_SIZE and Y_BED_SIZE are now required!"
+/*#elif !defined(X_BED_SIZE) || !defined(Y_BED_SIZE)
+  #error "X_BED_SIZE and Y_BED_SIZE are now required!"*/
 #elif WATCH_TEMP_PERIOD > 500
   #error "WATCH_TEMP_PERIOD now uses seconds instead of milliseconds."
 #elif DISABLED(THERMAL_PROTECTION_HOTENDS) && (defined(WATCH_TEMP_PERIOD) || defined(THERMAL_PROTECTION_PERIOD))
   #error "Thermal Runaway Protection for hotends is now enabled with THERMAL_PROTECTION_HOTENDS."
-#elif DISABLED(THERMAL_PROTECTION_BED) && defined(THERMAL_PROTECTION_BED_PERIOD)
-  #error "Thermal Runaway Protection for the bed is now enabled with THERMAL_PROTECTION_BED."
-#elif (CORE_IS_XZ || CORE_IS_YZ) && ENABLED(Z_LATE_ENABLE)
-  #error "Z_LATE_ENABLE can't be used with COREXZ, COREZX, COREYZ, or COREZY."
+/*#elif DISABLED(THERMAL_PROTECTION_BED) && defined(THERMAL_PROTECTION_BED_PERIOD)
+  #error "Thermal Runaway Protection for the bed is now enabled with THERMAL_PROTECTION_BED."*/
+/*#elif (CORE_IS_XZ || CORE_IS_YZ) && ENABLED(Z_LATE_ENABLE)
+  #error "Z_LATE_ENABLE can't be used with COREXZ, COREZX, COREYZ, or COREZY."*/
 #elif defined(X_HOME_RETRACT_MM)
   #error "[XYZ]_HOME_RETRACT_MM settings have been renamed [XYZ]_HOME_BUMP_MM."
 #elif defined(SDCARDDETECTINVERTED)
@@ -764,12 +764,15 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
 /**
  * Validate that the bed size fits
  */
+ /*
 static_assert(X_MAX_LENGTH >= X_BED_SIZE, "Movement bounds (X_MIN_POS, X_MAX_POS) are too narrow to contain X_BED_SIZE.");
 static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS) are too narrow to contain Y_BED_SIZE.");
+*/
 
 /**
  * Granular software endstops (Marlin >= 1.1.7)
  */
+ /*
 #if ENABLED(MIN_SOFTWARE_ENDSTOPS) && DISABLED(MIN_SOFTWARE_ENDSTOP_Z)
   #if IS_KINEMATIC
     #error "MIN_SOFTWARE_ENDSTOPS on DELTA/SCARA also requires MIN_SOFTWARE_ENDSTOP_Z."
@@ -827,6 +830,7 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
 #elif BOTH(ENDSTOPPULLUP_WMIN, ENDSTOPPULLDOWN_WMIN)
   #error "Enable only one of ENDSTOPPULLUP_W_MIN or ENDSTOPPULLDOWN_W_MIN."
 #endif
+*/
 
 /**
  * LCD Info Screen Style
