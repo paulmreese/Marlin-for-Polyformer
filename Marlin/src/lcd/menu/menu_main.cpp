@@ -50,9 +50,11 @@
   #define MACHINE_CAN_PAUSE 1
 #endif
 
+/*
 #if ENABLED(MMU2_MENUS)
   #include "menu_mmu2.h"
 #endif
+*/
 
 #if ENABLED(PASSWORD_FEATURE)
   #include "../../feature/password/password.h"
@@ -64,44 +66,6 @@
 
 #if ENABLED(GCODE_REPEAT_MARKERS)
   #include "../../feature/repeat.h"
-#endif
-
-void menu_tune();
-void menu_cancelobject();
-void menu_motion();
-void menu_temperature();
-void menu_configuration();
-
-#if HAS_POWER_MONITOR
-  void menu_power_monitor();
-#endif
-
-#if ENABLED(MIXING_EXTRUDER)
-  void menu_mixer();
-#endif
-
-#if ENABLED(ADVANCED_PAUSE_FEATURE)
-  void menu_change_filament();
-#endif
-
-#if ENABLED(LCD_INFO_MENU)
-  void menu_info();
-#endif
-
-#if EITHER(LED_CONTROL_MENU, CASE_LIGHT_MENU)
-  void menu_led();
-#endif
-
-#if HAS_CUTTER
-  void menu_spindle_laser();
-#endif
-
-#if ENABLED(PREHEAT_SHORTCUT_MENU_ITEM)
-  void menu_preheat_only();
-#endif
-
-#if HAS_MULTI_LANGUAGE
-  void menu_language();
 #endif
 
 #if ENABLED(CUSTOM_MENU_MAIN)
@@ -222,6 +186,48 @@ void menu_configuration();
 
 #endif // CUSTOM_MENU_MAIN
 
+void menu_tune();
+void menu_cancelobject();
+void menu_motion();
+void menu_temperature();
+void menu_configuration();
+
+#if HAS_POWER_MONITOR
+  void menu_power_monitor();
+#endif
+
+/*
+#if ENABLED(MIXING_EXTRUDER)
+  void menu_mixer();
+#endif
+*/
+
+#if ENABLED(ADVANCED_PAUSE_FEATURE)
+  void menu_change_filament();
+#endif
+
+#if ENABLED(LCD_INFO_MENU)
+  void menu_info();
+#endif
+
+#if EITHER(LED_CONTROL_MENU, CASE_LIGHT_MENU)
+  void menu_led();
+#endif
+
+/*
+#if HAS_CUTTER
+  void menu_spindle_laser();
+#endif
+*/
+
+#if ENABLED(PREHEAT_SHORTCUT_MENU_ITEM)
+  void menu_preheat_only();
+#endif
+
+#if HAS_MULTI_LANGUAGE
+  void menu_language();
+#endif
+
 void menu_main() {
   const bool busy = printingIsActive()
     #if ENABLED(SDSUPPORT)
@@ -316,9 +322,20 @@ void menu_main() {
 
     SUBMENU(MSG_MOTION, menu_motion);
   }
-
+  
+  /*
   #if HAS_CUTTER
     SUBMENU(MSG_CUTTER(MENU), STICKY_SCREEN(menu_spindle_laser));
+  #endif
+  */
+  #if ENABLED(CUSTOM_MENU_MAIN)
+    if (TERN1(CUSTOM_MENU_MAIN_ONLY_IDLE, !busy)) {
+      #ifdef CUSTOM_MENU_MAIN_TITLE
+        SUBMENU_F(F(CUSTOM_MENU_MAIN_TITLE), custom_menus_main);
+      #else
+        SUBMENU(MSG_CUSTOM_COMMANDS, custom_menus_main);
+    #endif
+    }
   #endif
 
   #if HAS_TEMPERATURE
@@ -329,25 +346,19 @@ void menu_main() {
     SUBMENU(MSG_POWER_MONITOR, menu_power_monitor);
   #endif
 
+  /*
   #if ENABLED(MIXING_EXTRUDER)
     SUBMENU(MSG_MIXER, menu_mixer);
   #endif
+  */
 
+  /*
   #if ENABLED(MMU2_MENUS)
     if (!busy) SUBMENU(MSG_MMU2_MENU, menu_mmu2);
   #endif
+  */
 
   SUBMENU(MSG_CONFIGURATION, menu_configuration);
-
-  #if ENABLED(CUSTOM_MENU_MAIN)
-    if (TERN1(CUSTOM_MENU_MAIN_ONLY_IDLE, !busy)) {
-      #ifdef CUSTOM_MENU_MAIN_TITLE
-        SUBMENU_F(F(CUSTOM_MENU_MAIN_TITLE), custom_menus_main);
-      #else
-        SUBMENU(MSG_CUSTOM_COMMANDS, custom_menus_main);
-      #endif
-    }
-  #endif
 
   #if ENABLED(ADVANCED_PAUSE_FEATURE)
     #if E_STEPPERS == 1 && DISABLED(FILAMENT_LOAD_UNLOAD_GCODES)
