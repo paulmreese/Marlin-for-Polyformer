@@ -24,6 +24,8 @@
 // Cancel Object Menu
 //
 
+// // This may or may not be particularly useful for Polyformer
+
 #include "../../inc/MarlinConfigPre.h"
 
 #if BOTH(HAS_MARLINUI_MENU, CANCEL_OBJECTS)
