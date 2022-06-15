@@ -637,10 +637,12 @@ void menu_advanced_settings() {
     #endif
 
     // M851 - Z Probe Offsets
+    /*
     #if HAS_BED_PROBE
       if (!is_busy) SUBMENU(MSG_ZPROBE_OFFSETS, menu_probe_offsets);
     #endif
-
+    */
+    
   #endif // !SLIM_LCD_MENUS
 
   // M92 - Steps Per mm
