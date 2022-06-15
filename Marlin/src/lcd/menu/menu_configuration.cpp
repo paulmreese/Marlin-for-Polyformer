@@ -44,12 +44,14 @@
   #include "../../feature/powerloss.h"
 #endif
 
+/*
 #if HAS_BED_PROBE
   #include "../../module/probe.h"
   #if ENABLED(BLTOUCH)
     #include "../../feature/bltouch.h"
   #endif
 #endif
+*/
 
 #if ENABLED(SOUND_MENU_ITEM)
   #include "../../libs/buzzer.h"
@@ -60,9 +62,11 @@
 #define HAS_DEBUG_MENU ENABLED(LCD_PROGRESS_BAR_TEST)
 
 void menu_advanced_settings();
+/*
 #if EITHER(DELTA_CALIBRATION_MENU, DELTA_AUTO_CALIBRATION)
   void menu_delta_calibrate();
 #endif
+*/
 
 #if ENABLED(LCD_PROGRESS_BAR_TEST)
 
@@ -105,7 +109,7 @@ void menu_advanced_settings();
   }
 
 #endif
-
+/*
 #if HAS_MULTI_EXTRUDER
 
   #include "../../module/tool_change.h"
@@ -161,7 +165,9 @@ void menu_advanced_settings();
   #endif
 
 #endif
+*/
 
+/*
 #if HAS_HOTEND_OFFSET
   #include "../../module/motion.h"
   #include "../../gcode/queue.h"
@@ -190,7 +196,9 @@ void menu_advanced_settings();
     END_MENU();
   }
 #endif
+*/
 
+/*
 #if ENABLED(DUAL_X_CARRIAGE)
 
   void menu_idex() {
@@ -216,7 +224,9 @@ void menu_advanced_settings();
   }
 
 #endif
+*/
 
+/*
 #if ENABLED(BLTOUCH)
 
   #if ENABLED(BLTOUCH_LCD_VOLTAGE_MENU)
@@ -257,7 +267,9 @@ void menu_advanced_settings();
   }
 
 #endif
+*/
 
+/*
 #if ENABLED(TOUCH_MI_PROBE)
 
   void menu_touchmi() {
@@ -272,6 +284,7 @@ void menu_advanced_settings();
   }
 
 #endif
+*/
 
 #if ENABLED(CONTROLLER_FAN_MENU)
 
@@ -492,11 +505,13 @@ void menu_configuration() {
 
   SUBMENU(MSG_ADVANCED_SETTINGS, menu_advanced_settings);
 
+  /*
   #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
     SUBMENU(MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
   #elif HAS_BED_PROBE
     EDIT_ITEM(LCD_Z_OFFSET_TYPE, MSG_ZPROBE_ZOFFSET, &probe.offset.z, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX);
   #endif
+  */
 
   //
   // Set Fan Controller speed
@@ -504,7 +519,8 @@ void menu_configuration() {
   #if ENABLED(CONTROLLER_FAN_MENU)
     SUBMENU(MSG_CONTROLLER_FAN, menu_controller_fan);
   #endif
-
+  
+  /*
   if (!busy) {
     #if EITHER(DELTA_CALIBRATION_MENU, DELTA_AUTO_CALIBRATION)
       SUBMENU(MSG_DELTA_CALIBRATE, menu_delta_calibrate);
@@ -526,6 +542,7 @@ void menu_configuration() {
       SUBMENU(MSG_TOUCHMI_PROBE, menu_touchmi);
     #endif
   }
+  */
 
   //
   // Set single nozzle filament retract and prime length
