@@ -24,6 +24,8 @@
 // TMC Menu
 //
 
+// // This shouldn't show any XYZ-related menus, unless the driver is enabled in Configuration
+
 #include "../../inc/MarlinConfigPre.h"
 
 #if HAS_MARLINUI_MENU && HAS_TRINAMIC_CONFIG
