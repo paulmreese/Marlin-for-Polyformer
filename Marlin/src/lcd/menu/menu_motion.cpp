@@ -37,15 +37,6 @@
 #include "../../gcode/parser.h" // for inch support
 #include "../../module/temperature.h"
 
-#if ENABLED(DELTA)
-  #include "../../module/delta.h"
-#endif
-
-#if HAS_LEVELING
-  #include "../../module/planner.h"
-  #include "../../feature/bedlevel/bedlevel.h"
-#endif
-
 #if ENABLED(MANUAL_E_MOVES_RELATIVE)
   float manual_move_e_origin = 0;
 #endif
@@ -53,65 +44,7 @@
 //
 // "Motion" > "Move Axis" submenu
 //
-
-static void _lcd_move_xyz(FSTR_P const name, const AxisEnum axis) {
-  if (ui.use_click()) return ui.goto_previous_screen_no_defer();
-  if (ui.encoderPosition && !ui.manual_move.processing) {
-    // Get motion limit from software endstops, if any
-    float min, max;
-    soft_endstop.get_manual_axis_limits(axis, min, max);
-
-    // Delta limits XY based on the current offset from center
-    // This assumes the center is 0,0
-    #if ENABLED(DELTA)
-      if (axis != Z_AXIS) {
-        max = SQRT(sq((float)(DELTA_PRINTABLE_RADIUS)) - sq(current_position[Y_AXIS - axis])); // (Y_AXIS - axis) == the other axis
-        min = -max;
-      }
-    #endif
-
-    // Get the new position
-    const float diff = float(int32_t(ui.encoderPosition)) * ui.manual_move.menu_scale;
-    (void)ui.manual_move.apply_diff(axis, diff, min, max);
-    ui.manual_move.soon(axis);
-    ui.refresh(LCDVIEW_REDRAW_NOW);
-  }
-  ui.encoderPosition = 0;
-  if (ui.should_draw()) {
-    const float pos = ui.manual_move.axis_value(axis);
-    if (parser.using_inch_units()) {
-      const float imp_pos = LINEAR_UNIT(pos);
-      MenuEditItemBase::draw_edit_screen(name, ftostr63(imp_pos));
-    }
-    else
-      MenuEditItemBase::draw_edit_screen(name, ui.manual_move.menu_scale >= 0.1f ? (LARGE_AREA_TEST ? ftostr51sign(pos) : ftostr41sign(pos)) : ftostr63(pos));
-  }
-}
-void lcd_move_x() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_X), X_AXIS); }
-#if HAS_Y_AXIS
-  void lcd_move_y() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_Y), Y_AXIS); }
-#endif
-#if HAS_Z_AXIS
-  void lcd_move_z() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_Z), Z_AXIS); }
-#endif
-#if HAS_I_AXIS
-  void lcd_move_i() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_I), I_AXIS); }
-#endif
-#if HAS_J_AXIS
-  void lcd_move_j() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_J), J_AXIS); }
-#endif
-#if HAS_K_AXIS
-  void lcd_move_k() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_K), K_AXIS); }
-#endif
-#if HAS_U_AXIS
-  void lcd_move_u() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_U), U_AXIS); }
-#endif
-#if HAS_V_AXIS
-  void lcd_move_v() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_V), V_AXIS); }
-#endif
-#if HAS_W_AXIS
-  void lcd_move_w() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_W), W_AXIS); }
-#endif
+// // No X/Y/Z/etc. control, only extruders. Should be fine because multiple Extruders are allowed
 
 #if E_MANUAL
 
@@ -140,18 +73,10 @@ void lcd_move_x() { _lcd_move_xyz(GET_TEXT_F(MSG_MOVE_X), X_AXIS); }
 
 #endif // E_MANUAL
 
-#if EITHER(PROBE_OFFSET_WIZARD, X_AXIS_TWIST_COMPENSATION)
-
-  void _goto_manual_move_z(const_float_t scale) {
-    ui.manual_move.menu_scale = scale;
-    ui.goto_screen(lcd_move_z);
-  }
-
-#endif
-
 //
 // "Motion" > "Move Xmm" > "Move XYZ" submenu
 //
+// // Same as above, no XYZ control
 
 #ifndef FINE_MANUAL_MOVE
   #define FINE_MANUAL_MOVE 0.025
@@ -166,13 +91,16 @@ void _goto_manual_move(const_float_t scale) {
   thermalManager.set_menu_cold_override(true);
 }
 
+//may have to ensure axes don't cause menu items to appear elsewhere, as E is included with others
+//this is handled in types.h
+//I'm going to temporarily comment out the first two lines of the switch and see if it compiles
 void _menu_move_distance(const AxisEnum axis, const screenFunc_t func, const int8_t eindex=active_extruder) {
   _manual_move_func_ptr = func;
   START_MENU();
   if (LCD_HEIGHT >= 4) {
     switch (axis) {
-      #define _CASE_MOVE(N) case N##_AXIS: STATIC_ITEM(MSG_MOVE_##N, SS_DEFAULT|SS_INVERT); break;
-      MAIN_AXIS_MAP(_CASE_MOVE)
+      //#define _CASE_MOVE(N) case N##_AXIS: STATIC_ITEM(MSG_MOVE_##N, SS_DEFAULT|SS_INVERT); break;
+      //MAIN_AXIS_MAP(_CASE_MOVE)
       default:
         TERN_(MANUAL_E_MOVES_RELATIVE, manual_move_e_origin = current_position.e);
         STATIC_ITEM(MSG_MOVE_E, SS_DEFAULT|SS_INVERT);
@@ -238,10 +166,13 @@ void menu_move() {
   START_MENU();
   BACK_ITEM(MSG_MOTION);
 
+  /*
   #if BOTH(HAS_SOFTWARE_ENDSTOPS, SOFT_ENDSTOPS_MENU_ITEM)
     EDIT_ITEM(bool, MSG_LCD_SOFT_ENDSTOPS, &soft_endstop._enabled);
   #endif
+  */
 
+  /*
   if (NONE(IS_KINEMATIC, NO_MOTION_BEFORE_HOMING) || all_axes_homed()) {
     if (TERN1(DELTA, current_position.z <= delta_clip_start_height)) {
       SUBMENU(MSG_MOVE_X, []{ _menu_move_distance(X_AXIS, lcd_move_x); });
@@ -278,6 +209,7 @@ void menu_move() {
   }
   else
     GCODES_ITEM(MSG_AUTO_HOME, FPSTR(G28_STR));
+    */
 
   #if ANY(SWITCHING_EXTRUDER, SWITCHING_NOZZLE, MAGNETIC_SWITCHING_TOOLHEAD)
 
@@ -341,6 +273,7 @@ void menu_move() {
   END_MENU();
 }
 
+/*
 #if ENABLED(INDIVIDUAL_AXIS_HOMING_SUBMENU)
   //
   // "Motion" > "Homing" submenu
@@ -379,16 +312,22 @@ void menu_move() {
     END_MENU();
   }
 #endif
+*/
 
+/*
 #if ENABLED(AUTO_BED_LEVELING_UBL)
   void _lcd_ubl_level_bed();
 #elif ENABLED(LCD_BED_LEVELING)
   void menu_bed_leveling();
 #endif
+*/
 
+
+/*
 #if ENABLED(ASSISTED_TRAMMING_WIZARD)
   void goto_tramming_wizard();
 #endif
+*/
 
 void menu_motion() {
   START_MENU();
@@ -401,12 +340,12 @@ void menu_motion() {
   //
   // Move Axis
   //
-  if (TERN1(DELTA, all_axes_homed()))
-    SUBMENU(MSG_MOVE_AXIS, menu_move);
+  SUBMENU(MSG_MOVE_AXIS, menu_move);
 
   //
   // Auto Home
   //
+  /*
   #if ENABLED(INDIVIDUAL_AXIS_HOMING_SUBMENU)
     SUBMENU(MSG_HOMING, menu_home);
   #else
@@ -498,6 +437,7 @@ void menu_motion() {
   #if ENABLED(Z_MIN_PROBE_REPEATABILITY_TEST)
     GCODES_ITEM(MSG_M48_TEST, F("G28O\nM48 P10"));
   #endif
+  */
 
   //
   // Disable Steppers
