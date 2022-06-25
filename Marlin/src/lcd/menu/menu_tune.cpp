@@ -38,72 +38,7 @@
   #include "../../module/tool_change.h"
 #endif
 
-#if HAS_LEVELING
-  #include "../../feature/bedlevel/bedlevel.h"
-#endif
-
-#if ENABLED(BABYSTEPPING)
-
-  #include "../../feature/babystep.h"
-  #include "../lcdprint.h"
-  #if HAS_MARLINUI_U8GLIB
-    #include "../dogm/marlinui_DOGM.h"
-  #endif
-
-  void _lcd_babystep(const AxisEnum axis, FSTR_P const fmsg) {
-    if (ui.use_click()) return ui.goto_previous_screen_no_defer();
-    if (ui.encoderPosition) {
-      const int16_t steps = int16_t(ui.encoderPosition) * (
-        #if ENABLED(BABYSTEP_XY)
-          axis == X_AXIS ? BABYSTEP_SIZE_X :
-          axis == Y_AXIS ? BABYSTEP_SIZE_Y :
-        #endif
-        BABYSTEP_SIZE_Z
-      );
-      ui.encoderPosition = 0;
-      ui.refresh(LCDVIEW_REDRAW_NOW);
-      babystep.add_steps(axis, steps);
-    }
-    if (ui.should_draw()) {
-      const float mps = planner.mm_per_step[axis];
-      MenuEditItemBase::draw_edit_screen(fmsg, BABYSTEP_TO_STR(mps * babystep.accum));
-      #if ENABLED(BABYSTEP_DISPLAY_TOTAL)
-        const bool in_view = TERN1(HAS_MARLINUI_U8GLIB, PAGE_CONTAINS(LCD_PIXEL_HEIGHT - MENU_FONT_HEIGHT, LCD_PIXEL_HEIGHT - 1));
-        if (in_view) {
-          TERN_(HAS_MARLINUI_U8GLIB, ui.set_font(FONT_MENU));
-          #if ENABLED(TFT_COLOR_UI)
-            lcd_moveto(4, 3);
-            lcd_put_u8str(GET_TEXT_F(MSG_BABYSTEP_TOTAL));
-            lcd_put_wchar(':');
-            lcd_moveto(10, 3);
-          #else
-            lcd_moveto(0, TERN(HAS_MARLINUI_U8GLIB, LCD_PIXEL_HEIGHT - MENU_FONT_DESCENT, LCD_HEIGHT - 1));
-            lcd_put_u8str(GET_TEXT_F(MSG_BABYSTEP_TOTAL));
-            lcd_put_wchar(':');
-          #endif
-          lcd_put_u8str(BABYSTEP_TO_STR(mps * babystep.axis_total[BS_TOTAL_IND(axis)]));
-        }
-      #endif
-    }
-  }
-
-  inline void _lcd_babystep_go(const screenFunc_t screen) {
-    ui.goto_screen(screen);
-    ui.defer_status_screen();
-    babystep.accum = 0;
-  }
-
-  #if ENABLED(BABYSTEP_XY)
-    void _lcd_babystep_x() { _lcd_babystep(X_AXIS, GET_TEXT_F(MSG_BABYSTEP_X)); }
-    void _lcd_babystep_y() { _lcd_babystep(Y_AXIS, GET_TEXT_F(MSG_BABYSTEP_Y)); }
-  #endif
-
-  #if DISABLED(BABYSTEP_ZPROBE_OFFSET)
-    void _lcd_babystep_z() { _lcd_babystep(Z_AXIS, GET_TEXT_F(MSG_BABYSTEP_Z)); }
-    void lcd_babystep_z()  { _lcd_babystep_go(_lcd_babystep_z); }
-  #endif
-
-#endif // BABYSTEPPING
+//Babystepping doesn't affect the extruder
 
 void menu_tune() {
   START_MENU();
@@ -113,13 +48,6 @@ void menu_tune() {
   // Speed:
   //
   EDIT_ITEM(int3, MSG_SPEED, &feedrate_percentage, 10, 999);
-
-  //
-  // Manual bed leveling, Bed Z:
-  //
-  #if BOTH(MESH_BED_LEVELING, LCD_BED_LEVELING)
-    EDIT_ITEM(float43, MSG_BED_Z, &bedlevel.z_offset, -1, 1);
-  #endif
 
   //
   // Nozzle:
@@ -140,9 +68,11 @@ void menu_tune() {
   //
   // Bed:
   //
+  /*
   #if HAS_HEATED_BED
     EDIT_ITEM_FAST(int3, MSG_BED, &thermalManager.temp_bed.target, 0, BED_MAX_TARGET, thermalManager.start_watching_bed);
   #endif
+  */
 
   //
   // Fan Speed:
@@ -213,23 +143,6 @@ void menu_tune() {
     #elif HAS_MULTI_EXTRUDER
       EXTRUDER_LOOP()
         EDIT_ITEM_N(float42_52, e, MSG_ADVANCE_K_E, &planner.extruder_advance_K[e], 0, 10);
-    #endif
-  #endif
-
-  //
-  // Babystep X:
-  // Babystep Y:
-  // Babystep Z:
-  //
-  #if ENABLED(BABYSTEPPING)
-    #if ENABLED(BABYSTEP_XY)
-      SUBMENU(MSG_BABYSTEP_X, []{ _lcd_babystep_go(_lcd_babystep_x); });
-      SUBMENU(MSG_BABYSTEP_Y, []{ _lcd_babystep_go(_lcd_babystep_y); });
-    #endif
-    #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-      SUBMENU(MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
-    #else
-      SUBMENU(MSG_BABYSTEP_Z, lcd_babystep_z);
     #endif
   #endif
 
