@@ -120,25 +120,13 @@ void _menu_move_distance(const AxisEnum axis, const screenFunc_t func, const int
     SUBMENU(MSG_MOVE_10MM, []{ _goto_manual_move(10);    });
     SUBMENU(MSG_MOVE_1MM,  []{ _goto_manual_move( 1);    });
     SUBMENU(MSG_MOVE_01MM, []{ _goto_manual_move( 0.1f); });
-    if (axis == Z_AXIS && (FINE_MANUAL_MOVE) > 0.0f && (FINE_MANUAL_MOVE) < 0.1f) {
-      // Determine digits needed right of decimal
-      constexpr uint8_t digs = !UNEAR_ZERO((FINE_MANUAL_MOVE) * 1000 - int((FINE_MANUAL_MOVE) * 1000)) ? 4 :
-                               !UNEAR_ZERO((FINE_MANUAL_MOVE) *  100 - int((FINE_MANUAL_MOVE) *  100)) ? 3 : 2;
-      PGM_P const label = GET_TEXT(MSG_MOVE_N_MM);
-      char tmp[strlen_P(label) + 10 + 1], numstr[10];
-      sprintf_P(tmp, label, dtostrf(FINE_MANUAL_MOVE, 1, digs, numstr));
-      #if DISABLED(HAS_GRAPHICAL_TFT)
-        SUBMENU_F(FPSTR(NUL_STR), []{ _goto_manual_move(float(FINE_MANUAL_MOVE)); });
-        MENU_ITEM_ADDON_START(0 + ENABLED(HAS_MARLINUI_HD44780));
-        lcd_put_u8str(tmp);
-        MENU_ITEM_ADDON_END();
-      #else
-        SUBMENU_F(FPSTR(tmp), []{ _goto_manual_move(float(FINE_MANUAL_MOVE)); });
-      #endif
-    }
+    if (axis == Z_AXIS && (FINE_MANUAL_MOVE) > 0.0f && (FINE_MANUAL_MOVE) < 0.1f)
+      SUBMENU_f(F(STRINGIFY(FINE_MANUAL_MOVE)), MSG_MOVE_N_MM, []{ _goto_manual_move(float(FINE_MANUAL_MOVE)); });
   }
   END_MENU();
 }
+
+void _menu_move_n_distance() { _menu_move_distance(AxisEnum(MenuItemBase::itemIndex), _lcd_move_axis_n); }
 
 #if E_MANUAL
 
@@ -173,38 +161,20 @@ void menu_move() {
   */
 
   /*
+  // Move submenu for each axis
   if (NONE(IS_KINEMATIC, NO_MOTION_BEFORE_HOMING) || all_axes_homed()) {
     if (TERN1(DELTA, current_position.z <= delta_clip_start_height)) {
-      SUBMENU(MSG_MOVE_X, []{ _menu_move_distance(X_AXIS, lcd_move_x); });
-      #if HAS_Y_AXIS
-        SUBMENU(MSG_MOVE_Y, []{ _menu_move_distance(Y_AXIS, lcd_move_y); });
+      for (uint8_t a = X_AXIS; a <= min(int(Y_AXIS), NUM_AXES - 1); a++)
+        SUBMENU_N(a, MSG_MOVE_N, _menu_move_n_distance);
+    }
+    else {
+      #if ENABLED(DELTA)
+        ACTION_ITEM(MSG_FREE_XY, []{ line_to_z(delta_clip_start_height); ui.synchronize(); });
       #endif
     }
-    #if ENABLED(DELTA)
-      else
-        ACTION_ITEM(MSG_FREE_XY, []{ line_to_z(delta_clip_start_height); ui.synchronize(); });
-    #endif
-
     #if HAS_Z_AXIS
-      SUBMENU(MSG_MOVE_Z, []{ _menu_move_distance(Z_AXIS, lcd_move_z); });
-    #endif
-    #if HAS_I_AXIS
-      SUBMENU(MSG_MOVE_I, []{ _menu_move_distance(I_AXIS, lcd_move_i); });
-    #endif
-    #if HAS_J_AXIS
-      SUBMENU(MSG_MOVE_J, []{ _menu_move_distance(J_AXIS, lcd_move_j); });
-    #endif
-    #if HAS_K_AXIS
-      SUBMENU(MSG_MOVE_K, []{ _menu_move_distance(K_AXIS, lcd_move_k); });
-    #endif
-    #if HAS_U_AXIS
-      SUBMENU(MSG_MOVE_U, []{ _menu_move_distance(U_AXIS, lcd_move_u); });
-    #endif
-    #if HAS_V_AXIS
-      SUBMENU(MSG_MOVE_V, []{ _menu_move_distance(V_AXIS, lcd_move_v); });
-    #endif
-    #if HAS_W_AXIS
-      SUBMENU(MSG_MOVE_W, []{ _menu_move_distance(W_AXIS, lcd_move_w); });
+      for (uint8_t a = Z_AXIS; a < NUM_AXES; a++)
+        SUBMENU_N(a, MSG_MOVE_N, _menu_move_n_distance);
     #endif
   }
   else
@@ -274,6 +244,8 @@ void menu_move() {
 }
 
 /*
+#define _HOME_ITEM(N) GCODES_ITEM_N(N##_AXIS, MSG_AUTO_HOME_A, F("G28X" STR_##N));
+
 #if ENABLED(INDIVIDUAL_AXIS_HOMING_SUBMENU)
   //
   // "Motion" > "Homing" submenu
@@ -283,31 +255,7 @@ void menu_move() {
     BACK_ITEM(MSG_MOTION);
 
     GCODES_ITEM(MSG_AUTO_HOME, FPSTR(G28_STR));
-    GCODES_ITEM_N(X_AXIS, MSG_AUTO_HOME_A, F("G28X"));
-    #if HAS_Y_AXIS
-      GCODES_ITEM_N(Y_AXIS, MSG_AUTO_HOME_A, F("G28Y"));
-    #endif
-    #if HAS_Z_AXIS
-      GCODES_ITEM_N(Z_AXIS, MSG_AUTO_HOME_A, F("G28Z"));
-    #endif
-    #if HAS_I_AXIS
-      GCODES_ITEM_N(I_AXIS, MSG_AUTO_HOME_A, F("G28" STR_I));
-    #endif
-    #if HAS_J_AXIS
-      GCODES_ITEM_N(J_AXIS, MSG_AUTO_HOME_A, F("G28" STR_J));
-    #endif
-    #if HAS_K_AXIS
-      GCODES_ITEM_N(K_AXIS, MSG_AUTO_HOME_A, F("G28" STR_K));
-    #endif
-    #if HAS_U_AXIS
-      GCODES_ITEM_N(U_AXIS, MSG_AUTO_HOME_A, F("G28" STR_U));
-    #endif
-    #if HAS_V_AXIS
-      GCODES_ITEM_N(V_AXIS, MSG_AUTO_HOME_A, F("G28" STR_V));
-    #endif
-    #if HAS_W_AXIS
-      GCODES_ITEM_N(W_AXIS, MSG_AUTO_HOME_A, F("G28" STR_W));
-    #endif
+    MAIN_AXIS_MAP(_HOME_ITEM);
 
     END_MENU();
   }
@@ -351,31 +299,7 @@ void menu_motion() {
   #else
     GCODES_ITEM(MSG_AUTO_HOME, FPSTR(G28_STR));
     #if ENABLED(INDIVIDUAL_AXIS_HOMING_MENU)
-      GCODES_ITEM_N(X_AXIS, MSG_AUTO_HOME_A, F("G28X"));
-      #if HAS_Y_AXIS
-        GCODES_ITEM_N(Y_AXIS, MSG_AUTO_HOME_A, F("G28Y"));
-      #endif
-      #if HAS_Z_AXIS
-        GCODES_ITEM_N(Z_AXIS, MSG_AUTO_HOME_A, F("G28Z"));
-      #endif
-      #if HAS_I_AXIS
-        GCODES_ITEM_N(I_AXIS, MSG_AUTO_HOME_A, F("G28" STR_I));
-      #endif
-      #if HAS_J_AXIS
-        GCODES_ITEM_N(J_AXIS, MSG_AUTO_HOME_A, F("G28" STR_J));
-      #endif
-      #if HAS_K_AXIS
-        GCODES_ITEM_N(K_AXIS, MSG_AUTO_HOME_A, F("G28" STR_K));
-      #endif
-      #if HAS_U_AXIS
-        GCODES_ITEM_N(U_AXIS, MSG_AUTO_HOME_A, F("G28" STR_U));
-      #endif
-      #if HAS_V_AXIS
-        GCODES_ITEM_N(V_AXIS, MSG_AUTO_HOME_A, F("G28" STR_V));
-      #endif
-      #if HAS_W_AXIS
-        GCODES_ITEM_N(W_AXIS, MSG_AUTO_HOME_A, F("G28" STR_W));
-      #endif
+      MAIN_AXIS_MAP(_HOME_ITEM);
     #endif
   #endif
 
@@ -430,7 +354,7 @@ void menu_motion() {
 
   #endif
 
-  #if ENABLED(LEVEL_BED_CORNERS) && DISABLED(LCD_BED_LEVELING)
+  #if ENABLED(LCD_BED_TRAMMING) && DISABLED(LCD_BED_LEVELING)
     SUBMENU(MSG_BED_TRAMMING, _lcd_level_bed_corners);
   #endif
 
