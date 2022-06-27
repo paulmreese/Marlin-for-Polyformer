@@ -126,7 +126,7 @@ void _menu_move_distance(const AxisEnum axis, const screenFunc_t func, const int
   END_MENU();
 }
 
-void _menu_move_n_distance() { _menu_move_distance(AxisEnum(MenuItemBase::itemIndex), _lcd_move_axis_n); }
+//void _menu_move_n_distance() { _menu_move_distance(AxisEnum(MenuItemBase::itemIndex), _lcd_move_axis_n); }
 
 #if E_MANUAL
 
