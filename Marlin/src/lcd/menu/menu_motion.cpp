@@ -65,7 +65,7 @@
         GET_TEXT_F(TERN(MULTI_E_MANUAL, MSG_MOVE_EN, MSG_MOVE_E)),
         ftostr41sign(current_position.e
           PLUS_TERN0(IS_KINEMATIC, ui.manual_move.offset)
-          MINUS_TERN0(MANUAL_E_MOVES_RELATIVE, manual_move_e_origin)
+          MINUS_TERN0(MANUAL_E_MOVES_RELATIVE, ui.manual_move.e_origin)
         )
       );
     } // should_draw
@@ -82,12 +82,10 @@
   #define FINE_MANUAL_MOVE 0.025
 #endif
 
-screenFunc_t _manual_move_func_ptr;
-
 void _goto_manual_move(const_float_t scale) {
   ui.defer_status_screen();
   ui.manual_move.menu_scale = scale;
-  ui.goto_screen(_manual_move_func_ptr);
+  ui.goto_screen(ui.manual_move.screen_ptr);
   thermalManager.set_menu_cold_override(true);
 }
 
@@ -95,15 +93,15 @@ void _goto_manual_move(const_float_t scale) {
 //this is handled in types.h
 //I'm going to temporarily comment out the first two lines of the switch and see if it compiles
 void _menu_move_distance(const AxisEnum axis, const screenFunc_t func, const int8_t eindex=active_extruder) {
-  _manual_move_func_ptr = func;
+  ui.manual_move.screen_ptr = func;
   START_MENU();
   if (LCD_HEIGHT >= 4) {
     switch (axis) {
       //#define _CASE_MOVE(N) case N##_AXIS: STATIC_ITEM(MSG_MOVE_##N, SS_DEFAULT|SS_INVERT); break;
       //MAIN_AXIS_MAP(_CASE_MOVE)
       default:
-        TERN_(MANUAL_E_MOVES_RELATIVE, manual_move_e_origin = current_position.e);
-        STATIC_ITEM(MSG_MOVE_E, SS_DEFAULT|SS_INVERT);
+        TERN_(MANUAL_E_MOVES_RELATIVE, ui.manual_move.e_origin = current_position.e);
+        STATIC_ITEM_N(eindex, MSG_MOVE_EN, SS_DEFAULT|SS_INVERT);
         break;
     }
   }
@@ -164,8 +162,10 @@ void menu_move() {
   // Move submenu for each axis
   if (NONE(IS_KINEMATIC, NO_MOTION_BEFORE_HOMING) || all_axes_homed()) {
     if (TERN1(DELTA, current_position.z <= delta_clip_start_height)) {
-      for (uint8_t a = X_AXIS; a <= min(int(Y_AXIS), NUM_AXES - 1); a++)
-        SUBMENU_N(a, MSG_MOVE_N, _menu_move_n_distance);
+      SUBMENU_N(X_AXIS, MSG_MOVE_N, []{ _menu_move_distance(X_AXIS, []{ lcd_move_axis(X_AXIS); }); });
+      #if HAS_Y_AXIS
+        SUBMENU_N(Y_AXIS, MSG_MOVE_N, []{ _menu_move_distance(Y_AXIS, []{ lcd_move_axis(Y_AXIS); }); });
+      #endif
     }
     else {
       #if ENABLED(DELTA)
@@ -173,8 +173,8 @@ void menu_move() {
       #endif
     }
     #if HAS_Z_AXIS
-      for (uint8_t a = Z_AXIS; a < NUM_AXES; a++)
-        SUBMENU_N(a, MSG_MOVE_N, _menu_move_n_distance);
+      #define _AXIS_MOVE(N) SUBMENU_N(N, MSG_MOVE_N, []{ _menu_move_distance(AxisEnum(N), []{ lcd_move_axis(AxisEnum(N)); }); });
+      REPEAT_S(2, NUM_AXES, _AXIS_MOVE);
     #endif
   }
   else
@@ -220,9 +220,9 @@ void menu_move() {
   #if E_MANUAL
 
     // The current extruder
-    SUBMENU(MSG_MOVE_E, []{ _menu_move_distance_e_maybe(); });
+    SUBMENU(MSG_MOVE_E, _menu_move_distance_e_maybe);
 
-    #define SUBMENU_MOVE_E(N) SUBMENU_N(N, MSG_MOVE_EN, []{ _menu_move_distance(E_AXIS, []{ lcd_move_e(MenuItemBase::itemIndex); }, MenuItemBase::itemIndex); });
+    #define SUBMENU_MOVE_E(N) SUBMENU_N(N, MSG_MOVE_EN, []{ _menu_move_distance(E_AXIS, []{ lcd_move_e(N); }, N); });
 
     #if EITHER(SWITCHING_EXTRUDER, SWITCHING_NOZZLE)
 
@@ -234,7 +234,7 @@ void menu_move() {
     #elif MULTI_E_MANUAL
 
       // Independent extruders with one E stepper per hotend
-      LOOP_L_N(n, E_MANUAL) SUBMENU_MOVE_E(n);
+      REPEAT(E_MANUAL, SUBMENU_MOVE_E);
 
     #endif
 
